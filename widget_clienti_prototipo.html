@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CLIENTE</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;padding:12px;color:#222;font-size:14px}
+h3{margin:0 0 12px;font-size:16px}
+label{display:block;font-weight:700;margin:10px 0 5px}
+input,button{box-sizing:border-box;font:inherit}
+input{width:100%;padding:9px;border:1px solid #999;border-radius:4px;background:#fff}
+button{padding:9px 12px;border:1px solid #888;border-radius:4px;background:#fff;cursor:pointer}
+.results{border:1px solid #bbb;border-top:0;background:#fff;max-height:260px;overflow:auto}
+.result{padding:10px;border-top:1px solid #eee;cursor:pointer}
+.result:hover{background:#f3f3f3}
+.card{border:1px solid #bbb;border-radius:5px;padding:10px;margin-top:10px;background:#fafafa}
+.muted{color:#666;font-size:12px}
+.error{color:#a00000;font-size:12px;margin-top:7px}
+.hidden{display:none}
+.actions{display:flex;gap:8px;margin-top:10px}
+.actions button{flex:1}
+</style>
+<script src="https://js.jotform.com/JotFormCustomWidget.min.js"></script>
+</head>
+<body>
+<h3>CLIENTE</h3>
+<label for="search">Cerca cliente</label>
+<input id="search" type="search" autocomplete="off"
+ placeholder="Cerca insegna, ragione sociale o indirizzo...">
+<div id="results" class="results hidden"></div>
+<div id="selected" class="card hidden"></div>
+<div class="actions">
+  <button id="newBtn" type="button">+ Aggiungi nuovo cliente</button>
+  <button id="clearBtn" type="button">Azzera</button>
+</div>
+<div id="newForm" class="card hidden">
+  <label>Nome / Insegna</label><input id="name">
+  <label>Ragione Sociale</label><input id="company">
+  <label>Indirizzo</label><input id="address">
+  <label>Comune</label><input id="city">
+  <label>Provincia</label><input id="province">
+  <div class="actions">
+    <button id="saveBtn" type="button">Salva cliente</button>
+    <button id="cancelBtn" type="button">Annulla</button>
+  </div>
+  <div id="error" class="error"></div>
+</div>
+
+<script>
+const SAMPLE_CLIENTS = [
+ {id:'1',name:'TecnoFood',company:'TecnoFood Italia S.p.A.',address:'Via del Lavoro 8',city:'Bologna',province:'BO'},
+ {id:'2',name:'Officina Rossi',company:'Rossi Industrial S.r.l.',address:'Via delle Industrie 12',city:'Milano',province:'MI'},
+ {id:'3',name:'Pewex',company:'Alpa',address:'Motopoli Sabina',city:'',province:''},
+ {id:'4',name:'Prova',company:'xxx',address:'Roma',city:'Ariccia',province:'RM'}
+];
+let clients=SAMPLE_CLIENTS.slice(), selected=null;
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function resizeWidget(){
+  if(window.JFCustomWidget?.requestFrameResize){
+    const h=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight)+8;
+    JFCustomWidget.requestFrameResize({height:h});
+  }
+}
+function scheduleResize(){requestAnimationFrame(resizeWidget)}
+function send(){
+  if(!window.JFCustomWidget)return;
+  JFCustomWidget.sendData({value:selected?JSON.stringify({
+    ID_Cliente:selected.id,Nome_Insegna:selected.name,Ragione_Sociale:selected.company,
+    Indirizzo:selected.address,Comune:selected.city,Provincia:selected.province
+  }):''});
+}
+function renderResults(list){
+  $('results').innerHTML=list.map(c=>`<div class="result" data-id="${esc(c.id)}">
+    <strong>${esc(c.name)}</strong><br>
+    <span class="muted">${esc(c.company)} · ${esc(c.address)}${c.city?', '+esc(c.city):''}${c.province?', '+esc(c.province):''}</span>
+  </div>`).join('');
+  $('results').classList.toggle('hidden',!list.length);
+  $('results').querySelectorAll('.result').forEach(el=>{
+    el.onclick=()=>select(clients.find(c=>c.id===el.dataset.id));
+  });
+  scheduleResize();
+}
+function select(c){
+  selected=c;
+  $('search').value='';
+  $('results').classList.add('hidden');
+  $('selected').innerHTML=`<strong>${esc(c.name)}</strong><br>${esc(c.company)}<br>${esc(c.address)}${c.city?', '+esc(c.city):''}${c.province?', '+esc(c.province):''}`;
+  $('selected').classList.remove('hidden');
+  $('newForm').classList.add('hidden');
+  send(); scheduleResize();
+}
+function clearAll(){
+  selected=null;$('search').value='';$('results').classList.add('hidden');
+  $('selected').classList.add('hidden');$('newForm').classList.add('hidden');
+  send();scheduleResize();
+}
+$('search').addEventListener('input',e=>{
+  const q=e.target.value.trim().toLowerCase();
+  renderResults(q?clients.filter(c=>(c.name+' '+c.company+' '+c.address+' '+c.city+' '+c.province).toLowerCase().includes(q)):[]);
+});
+$('newBtn').onclick=()=>{$('newForm').classList.remove('hidden');scheduleResize()};
+$('cancelBtn').onclick=()=>{$('newForm').classList.add('hidden');scheduleResize()};
+$('clearBtn').onclick=clearAll;
+$('saveBtn').onclick=()=>{
+  $('error').textContent='';
+  const c={id:'NEW-'+Date.now(),name:$('name').value.trim(),company:$('company').value.trim(),
+    address:$('address').value.trim(),city:$('city').value.trim(),province:$('province').value.trim()};
+  if(!c.name||!c.company||!c.address){$('error').textContent='Compila Nome/Insegna, Ragione Sociale e Indirizzo.';return}
+  clients.push(c); ['name','company','address','city','province'].forEach(id=>$(id).value='');
+  select(c);
+};
+if(window.ResizeObserver)new ResizeObserver(scheduleResize).observe(document.body);
+if(window.JFCustomWidget){
+  JFCustomWidget.subscribe('ready',()=>{send();scheduleResize()});
+  JFCustomWidget.subscribe('submit',()=>JFCustomWidget.sendSubmit({valid:!!selected,value:JSON.stringify(selected||{})}));
+}
+scheduleResize();
+</script>
+</body>
+</html>
