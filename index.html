@@ -53,17 +53,19 @@ const SAMPLE_CLIENTS=[
  {id:'4',name:'Prova',company:'xxx',address:'Roma',city:'Ariccia',province:'RM'}
 ];
 let clients=SAMPLE_CLIENTS.slice(),selected=null;
+const CLIENT_SYNC_KEY='assistenza_tecnica_selected_client_v1';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function resizeWidget(){if(window.JFCustomWidget?.requestFrameResize){const h=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight)+8;JFCustomWidget.requestFrameResize({height:h});}}
 function scheduleResize(){requestAnimationFrame(resizeWidget)}
 function valueForJotform(){if(!selected)return '';return JSON.stringify({ID_Cliente:selected.id,Nome_Insegna:selected.name,Ragione_Sociale:selected.company,Indirizzo:selected.address,Comune:selected.city,Provincia:selected.province});}
+function syncClient(){try{if(selected)localStorage.setItem(CLIENT_SYNC_KEY,valueForJotform());else localStorage.removeItem(CLIENT_SYNC_KEY);}catch(e){}}
 function sendData(){if(!window.JFCustomWidget)return;JFCustomWidget.sendData({value:valueForJotform()});}
 function renderSelected(){if(!selected){$('selected').classList.add('hidden');$('selected').innerHTML='';return;} $('selected').innerHTML=`<strong>${esc(selected.name)}</strong><br>${esc(selected.company)}<br>${esc(selected.address)}${selected.city?', '+esc(selected.city):''}${selected.province?', '+esc(selected.province):''}`;$('selected').classList.remove('hidden');}
 function renderResults(list){$('results').innerHTML=list.map(c=>`<div class="result" data-id="${esc(c.id)}"><strong>${esc(c.name)}</strong><br><span class="muted">${esc(c.company)} · ${esc(c.address)}${c.city?', '+esc(c.city):''}${c.province?', '+esc(c.province):''}</span></div>`).join('');$('results').classList.toggle('hidden',!list.length);$('results').querySelectorAll('.result').forEach(el=>{el.onclick=()=>{const c=clients.find(x=>String(x.id)===String(el.dataset.id));if(c)selectClient(c);};});scheduleResize();}
-function selectClient(c){selected={id:String(c.id??''),name:String(c.name??''),company:String(c.company??''),address:String(c.address??''),city:String(c.city??''),province:String(c.province??'')};$('search').value='';$('results').classList.add('hidden');$('newForm').classList.add('hidden');renderSelected();sendData();scheduleResize();}
-function restoreSavedValue(value){selected=null;if(typeof value==='string'&&value.trim()){try{const saved=JSON.parse(value);if(saved&&typeof saved==='object'&&saved.ID_Cliente){const master=clients.find(c=>String(c.id)===String(saved.ID_Cliente));selected=master?{...master}:{id:String(saved.ID_Cliente),name:String(saved.Nome_Insegna??''),company:String(saved.Ragione_Sociale??''),address:String(saved.Indirizzo??''),city:String(saved.Comune??''),province:String(saved.Provincia??'')};}}catch(e){}}renderSelected();scheduleResize();}
-function clearAll(){selected=null;$('search').value='';$('results').classList.add('hidden');$('newForm').classList.add('hidden');renderSelected();sendData();scheduleResize();}
+function selectClient(c){selected={id:String(c.id??''),name:String(c.name??''),company:String(c.company??''),address:String(c.address??''),city:String(c.city??''),province:String(c.province??'')};$('search').value='';$('results').classList.add('hidden');$('newForm').classList.add('hidden');renderSelected();syncClient();sendData();scheduleResize();}
+function restoreSavedValue(value){selected=null;if(typeof value==='string'&&value.trim()){try{const saved=JSON.parse(value);if(saved&&typeof saved==='object'&&saved.ID_Cliente){const master=clients.find(c=>String(c.id)===String(saved.ID_Cliente));selected=master?{...master}:{id:String(saved.ID_Cliente),name:String(saved.Nome_Insegna??''),company:String(saved.Ragione_Sociale??''),address:String(saved.Indirizzo??''),city:String(saved.Comune??''),province:String(saved.Provincia??'')};}}catch(e){}}renderSelected();syncClient();scheduleResize();}
+function clearAll(){selected=null;$('search').value='';$('results').classList.add('hidden');$('newForm').classList.add('hidden');renderSelected();syncClient();sendData();scheduleResize();}
 $('search').addEventListener('input',e=>{const q=e.target.value.trim().toLowerCase();renderResults(q?clients.filter(c=>(c.name+' '+c.company+' '+c.address+' '+c.city+' '+c.province).toLowerCase().includes(q)):[]);});
 $('newBtn').onclick=()=>{$('newForm').classList.remove('hidden');scheduleResize()};
 $('cancelBtn').onclick=()=>{$('newForm').classList.add('hidden');scheduleResize()};
