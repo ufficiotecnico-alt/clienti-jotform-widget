@@ -27,7 +27,7 @@ button{padding:9px 12px;border:1px solid #888;border-radius:4px;background:#fff;
 <h3>CLIENTE</h3>
 <label for="search">Cerca cliente</label>
 <input id="search" type="search" autocomplete="off" placeholder="Cerca insegna, ragione sociale o indirizzo...">
-<div id="results" class="results hidden"></div>
+<div id="results" class="results hidden"></div>\n<div id="status" class="muted" role="status" aria-live="polite">Caricamento clienti...</div>
 <div id="selected" class="card hidden"></div>
 <div class="actions">
   <button id="newBtn" type="button">+ Aggiungi nuovo cliente</button>
@@ -46,16 +46,31 @@ button{padding:9px 12px;border:1px solid #888;border-radius:4px;background:#fff;
   <div id="error" class="error"></div>
 </div>
 <script>
-const SAMPLE_CLIENTS=[
- {id:'1',name:'TecnoFood',company:'TecnoFood Italia S.p.A.',address:'Via del Lavoro 8',city:'Bologna',province:'BO'},
- {id:'2',name:'Officina Rossi',company:'Rossi Industrial S.r.l.',address:'Via delle Industrie 12',city:'Milano',province:'MI'},
- {id:'3',name:'Pewex',company:'Alpa',address:'Motopoli Sabina',city:'',province:''},
- {id:'4',name:'Prova',company:'xxx',address:'Roma',city:'Ariccia',province:'RM'}
-];
-let clients=SAMPLE_CLIENTS.slice(),selected=null;
+const API_URL='https://script.google.com/macros/s/AKfycbyxdCMuqQ-jH7WrS1fvGLTEYeZ3VgZIqaUQc4Bqtm-te-smG18989Zv9WrnRwllq9V8/exec';
+let clients=[],selected=null,clientsLoaded=false,readyValue='';
 const CLIENT_SYNC_KEY='assistenza_tecnica_selected_client_v1';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function normalizeClient(c){return {id:String(c.ID_Cliente??c.id??c.id_cliente??''),name:String(c.Nome_Insegna??c.name??c.nome_insegna??''),company:String(c.Ragione_Sociale??c.company??c.ragione_sociale??''),address:String(c.Indirizzo??c.address??c.indirizzo??''),city:String(c.Comune??c.city??c.comune??''),province:String(c.Provincia??c.province??c.provincia??'')};}
+function extractClients(json){if(Array.isArray(json))return json;if(json&&Array.isArray(json.data))return json.data;if(json&&Array.isArray(json.clienti))return json.clienti;if(json&&Array.isArray(json.results))return json.results;if(json&&Array.isArray(json.rows))return json.rows;return [];}
+async function loadClients(){
+  $('status').textContent='Caricamento clienti...';
+  try{
+    const response=await fetch(API_URL+'?action=clienti',{method:'GET',cache:'no-store'});
+    if(!response.ok)throw new Error('Risposta HTTP '+response.status);
+    const json=await response.json();
+    clients=extractClients(json).map(normalizeClient).filter(c=>c.id&& (c.name||c.company));
+    clientsLoaded=true;
+    $('status').textContent=clients.length?`Clienti caricati: ${clients.length}`:'Nessun cliente presente nell’anagrafica.';
+    restoreSavedValue(readyValue);
+  }catch(err){
+    clients=[];clientsLoaded=false;
+    $('status').textContent='Impossibile caricare i clienti dal database. Verifica la connessione al servizio.';
+    console.error('Errore caricamento clienti:',err);
+    restoreSavedValue(readyValue);
+  }
+  scheduleResize();
+}
 function resizeWidget(){if(window.JFCustomWidget?.requestFrameResize){const h=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight)+8;JFCustomWidget.requestFrameResize({height:h});}}
 function scheduleResize(){requestAnimationFrame(resizeWidget)}
 function valueForJotform(){return selected ? String(selected.id) : '';}
@@ -79,14 +94,7 @@ function restoreSavedValue(value){
    if(id){
      const master=clients.find(c=>String(c.id)===id);
      if(master) selected={...master};
-     else {
-       try{
-         const saved=JSON.parse(raw);
-         if(saved&&typeof saved==='object'&&saved.ID_Cliente){
-           selected={id:String(saved.ID_Cliente),name:String(saved.Nome_Insegna??''),company:String(saved.Ragione_Sociale??''),address:String(saved.Indirizzo??''),city:String(saved.Comune??''),province:String(saved.Provincia??'')};
-         }
-       }catch(e){}
-     }
+     else { selected=null; }
    }
  }
  renderSelected();syncClient();sendData();scheduleResize();
@@ -98,7 +106,7 @@ $('cancelBtn').onclick=()=>{$('newForm').classList.add('hidden');scheduleResize(
 $('clearBtn').onclick=clearAll;
 $('saveBtn').onclick=()=>{$('error').textContent='';const c={id:'NEW-'+Date.now(),name:$('name').value.trim(),company:$('company').value.trim(),address:$('address').value.trim(),city:$('city').value.trim(),province:$('province').value.trim()};if(!c.name||!c.company||!c.address){$('error').textContent='Compila Nome/Insegna, Ragione Sociale e Indirizzo.';scheduleResize();return;}clients.push(c);['name','company','address','city','province'].forEach(id=>$(id).value='');selectClient(c);};
 if(window.ResizeObserver)new ResizeObserver(scheduleResize).observe(document.body);
-if(window.JFCustomWidget){JFCustomWidget.subscribe('ready',function(formData){restoreSavedValue(formData&&formData.value);JFCustomWidget.subscribe('submit',function(){JFCustomWidget.sendSubmit({valid:!!selected,value:valueForJotform()});});});}
+if(window.JFCustomWidget){JFCustomWidget.subscribe('ready',function(formData){readyValue=formData&&formData.value;JFCustomWidget.subscribe('submit',function(){JFCustomWidget.sendSubmit({valid:!!selected,value:valueForJotform()});});loadClients();});}else{loadClients();}
 scheduleResize();
 </script>
 </body>
