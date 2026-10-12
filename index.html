@@ -105,7 +105,31 @@ $('search').addEventListener('input',e=>{const q=e.target.value.trim().toLowerCa
 $('newBtn').onclick=()=>{$('newForm').classList.remove('hidden');scheduleResize()};
 $('cancelBtn').onclick=()=>{$('newForm').classList.add('hidden');scheduleResize()};
 $('clearBtn').onclick=clearAll;
-$('saveBtn').onclick=()=>{$('error').textContent='';const c={id:'NEW-'+Date.now(),name:$('name').value.trim(),company:$('company').value.trim(),address:$('address').value.trim(),city:$('city').value.trim(),province:$('province').value.trim()};if(!c.name||!c.company||!c.address){$('error').textContent='Compila Nome/Insegna, Ragione Sociale e Indirizzo.';scheduleResize();return;}clients.push(c);['name','company','address','city','province'].forEach(id=>$(id).value='');selectClient(c);};
+$('saveBtn').onclick=async()=>{
+  $('error').textContent='';
+  const c={name:$('name').value.trim(),company:$('company').value.trim(),address:$('address').value.trim(),city:$('city').value.trim(),province:$('province').value.trim()};
+  if(!c.name||!c.company||!c.address){$('error').textContent='Compila Nome/Insegna, Ragione Sociale e Indirizzo.';scheduleResize();return;}
+  const btn=$('saveBtn');
+  btn.disabled=true; btn.textContent='Salvataggio...';
+  try{
+    const body=new URLSearchParams({action:'aggiungicliente',Nome_Insegna:c.name,Ragione_Sociale:c.company,Indirizzo:c.address,CAP:'',Comune:c.city,Provincia:c.province});
+    const response=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:body.toString()});
+    if(!response.ok)throw new Error('Risposta HTTP '+response.status);
+    const result=await response.json();
+    if(!result||result.ok!==true)throw new Error(result&&result.error?result.error:'Il servizio non ha confermato il salvataggio.');
+    const saved={id:String(result.ID_Cliente),...c};
+    if(!saved.id||saved.id==='undefined')throw new Error('Salvataggio segnalato ma ID cliente mancante.');
+    clients.push(saved);
+    ['name','company','address','city','province'].forEach(id=>$(id).value='');
+    $('newForm').classList.add('hidden');
+    $('status').textContent='Cliente registrato nel database.';
+    selectClient(saved);
+    loadClients();
+  }catch(err){
+    console.error('Errore salvataggio cliente:',err);
+    $('error').textContent='Salvataggio non confermato: '+(err&&err.message?err.message:'errore di comunicazione')+'. Verifica il foglio CLIENTI prima di riprovare.';
+  }finally{btn.disabled=false;btn.textContent='Salva cliente';scheduleResize();}
+};
 if(window.ResizeObserver)new ResizeObserver(scheduleResize).observe(document.body);
 if(window.JFCustomWidget){JFCustomWidget.subscribe('ready',function(formData){readyValue=formData&&formData.value;JFCustomWidget.subscribe('submit',function(){JFCustomWidget.sendSubmit({valid:!!selected,value:valueForJotform()});});loadClients();});}else{loadClients();}
 scheduleResize();
