@@ -32,6 +32,16 @@ body {
   overflow-y: visible;
 }
 
+/* Solo durante l'inserimento: limita il documento all'altezza dell'iframe
+   e permette di scorrere i campi senza allungare il widget esterno. */
+body.form-open {
+  max-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
 h3 {
   margin: 0 0 12px;
   font-size: 16px;
@@ -120,6 +130,19 @@ button:disabled {
   flex: 1;
   min-width: 0;
 }
+
+
+/* TEST DIAGNOSTICO: esclude temporaneamente l'inserimento di nuovi clienti */
+#newBtn,
+#newForm {
+  display: none !important;
+}
+
+/* Il pulsante Azzera resta utilizzabile e occupa tutta la riga */
+.actions:has(#clearBtn) #clearBtn {
+  flex: 1 1 100%;
+}
+
 </style>
 
 <script src="https://js.jotform.com/JotFormCustomWidget.min.js"></script>
@@ -466,6 +489,7 @@ function selectClient(c) {
   $('results').classList.add('hidden');
 
   $('newForm').classList.add('hidden');
+  document.body.classList.remove('form-open');
 
   renderSelected();
 
@@ -541,6 +565,7 @@ function clearAll() {
   $('results').classList.add('hidden');
 
   $('newForm').classList.add('hidden');
+  document.body.classList.remove('form-open');
 
   renderSelected();
 
@@ -584,6 +609,7 @@ $('search').addEventListener('input', e => {
 $('newBtn').onclick = () => {
 
   $('newForm').classList.remove('hidden');
+  document.body.classList.add('form-open');
 
   scheduleResize();
 };
@@ -591,6 +617,7 @@ $('newBtn').onclick = () => {
 $('cancelBtn').onclick = () => {
 
   $('newForm').classList.add('hidden');
+  document.body.classList.remove('form-open');
 
   scheduleResize();
 };
@@ -707,6 +734,7 @@ $('saveBtn').onclick = async () => {
     });
 
     $('newForm').classList.add('hidden');
+  document.body.classList.remove('form-open');
 
     $('status').textContent =
       'Cliente registrato nel database.';
