@@ -104,12 +104,27 @@ button:disabled {
   flex: 1;
   min-width: 0;
 }
+
+/* Gestione compatta dell'ingombro, sul modello Macchinari.
+   L'altezza esterna resta regolabile dalle proprieta del widget JotForm. */
+html { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: inherit; }
+body { min-height: 0; overflow: hidden; }
+#clientContent {
+  max-height: calc(100vh - 24px);
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+
 </style>
 
 <script src="https://js.jotform.com/JotFormCustomWidget.min.js"></script>
 </head>
 
 <body>
+<div id="clientContent">
 
 <h3>CLIENTE</h3>
 
@@ -168,6 +183,8 @@ button:disabled {
   </div>
 
   <div id="error" class="error"></div>
+
+</div>
 
 </div>
 
