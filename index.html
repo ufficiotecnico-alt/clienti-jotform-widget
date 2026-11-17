@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="it">
 <head>
@@ -6,13 +7,29 @@
 <title>CLIENTE</title>
 
 <style>
+/* Gestione dimensioni del documento, allineata al widget Macchinari */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+}
+
 body {
   font-family: Arial, sans-serif;
   margin: 0;
-  padding: 12px;
+  padding: 4px 4px 18px;
   color: #222;
   font-size: 14px;
-  box-sizing: border-box;
+  height: auto;
+  max-height: none;
+  display: block;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 h3 {
@@ -103,27 +120,12 @@ button:disabled {
   flex: 1;
   min-width: 0;
 }
-
-/* Gestione compatta dell'ingombro, sul modello Macchinari.
-   L'altezza esterna resta regolabile dalle proprieta del widget JotForm. */
-html { box-sizing: border-box; }
-*, *::before, *::after { box-sizing: inherit; }
-body { min-height: 0; overflow: hidden; }
-#clientContent {
-  max-height: calc(100vh - 24px);
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-gutter: stable;
-}
-
 </style>
 
 <script src="https://js.jotform.com/JotFormCustomWidget.min.js"></script>
 </head>
 
 <body>
-<div id="clientContent">
 
 <h3>CLIENTE</h3>
 
@@ -182,8 +184,6 @@ body { min-height: 0; overflow: hidden; }
   </div>
 
   <div id="error" class="error"></div>
-
-</div>
 
 </div>
 
