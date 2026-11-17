@@ -195,53 +195,15 @@ String(v ?? '').replace(/[&<>"']/g, c => ({
   "'": '&#39;'
 }[c]));
 
-// ========================================
-// RIDIMENSIONAMENTO AUTOMATICO DEL WIDGET
-// ========================================
+// RIDIMENSIONAMENTO DISATTIVATO PER TEST
 
 function resizeWidget() {
-
-  if (
-    !window.JFCustomWidget ||
-    !window.JFCustomWidget.requestFrameResize
-  ) {
-    return;
-  }
-
-  const elementi = Array.from(document.body.children)
-    .filter(el => el.tagName !== 'SCRIPT');
-
-  let fondoContenuto = 0;
-
-  elementi.forEach(el => {
-
-    if (el.offsetHeight > 0) {
-
-      const fondo =
-        el.offsetTop + el.offsetHeight;
-
-      fondoContenuto =
-        Math.max(fondoContenuto, fondo);
-    }
-
-  });
-
-  const altezza =
-    Math.ceil(fondoContenuto + 14);
-
-  JFCustomWidget.requestFrameResize({
-    height: altezza
-  });
+  // Temporaneamente disattivato
 }
 
 function scheduleResize() {
-
-  requestAnimationFrame(() => {
-    resizeWidget();
-  });
-
+  // Temporaneamente disattivato
 }
-
 // ========================================
 // GESTIONE ANAGRAFICA CLIENTI
 // ========================================
@@ -766,13 +728,13 @@ $('saveBtn').onclick = async () => {
 // OSSERVATORE DEL CONTENUTO
 // ========================================
 
+/*
 if (window.ResizeObserver) {
-
   new ResizeObserver(() => {
     scheduleResize();
   }).observe(document.body);
-
 }
+*/
 
 // ========================================
 // INIZIALIZZAZIONE JOTFORM
