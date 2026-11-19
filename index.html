@@ -199,8 +199,8 @@ String(v ?? '').replace(/[&<>"']/g, c => ({
 // RIDIMENSIONAMENTO AUTOMATICO DEL WIDGET
 // ========================================
 
-function resizeWidget() {
 
+function resizeWidget() {
   if (
     !window.JFCustomWidget ||
     !window.JFCustomWidget.requestFrameResize
@@ -208,39 +208,28 @@ function resizeWidget() {
     return;
   }
 
-  const elementi = Array.from(document.body.children)
+  const body = document.body;
+  const elementi = Array.from(body.children)
     .filter(el => el.tagName !== 'SCRIPT');
 
   let fondoContenuto = 0;
 
   elementi.forEach(el => {
-
     if (el.offsetHeight > 0) {
-
-      const fondo =
-        el.offsetTop + el.offsetHeight;
-
-      fondoContenuto =
-        Math.max(fondoContenuto, fondo);
+      const fondo = el.offsetTop + el.offsetHeight;
+      fondoContenuto = Math.max(fondoContenuto, fondo);
     }
-
   });
 
-  const altezza =
-    Math.ceil(fondoContenuto + 14);
+  const altezza = Math.ceil(
+    fondoContenuto + 4
+  );
 
   JFCustomWidget.requestFrameResize({
     height: altezza
   });
 }
 
-function scheduleResize() {
-
-  requestAnimationFrame(() => {
-    resizeWidget();
-  });
-
-}
 
 // ========================================
 // GESTIONE ANAGRAFICA CLIENTI
