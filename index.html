@@ -229,7 +229,10 @@ function resizeWidget() {
     height: altezza
   });
 }
-
+  
+function scheduleResize() {
+  requestAnimationFrame(resizeWidget);
+}
 
 // ========================================
 // GESTIONE ANAGRAFICA CLIENTI
