@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diagnostica campi Jotform</title><script src="https://js.jotform.com/JotFormCustomWidget.min.js"></script><style>body{font:15px Arial,sans-serif;margin:12px}label,input,button{display:block;margin:8px 0}input,button{font:inherit;padding:10px;max-width:100%;box-sizing:border-box}pre{white-space:pre-wrap;overflow-wrap:anywhere}</style></head><body><strong>TEST – scrittura campo nativo</strong><label for="field">ID numerico del campo di prova</label><input id="field" inputmode="numeric" placeholder="Es. 81"><button id="test" disabled>Prova scrittura</button><pre id="log" role="status" aria-live="polite">In attesa di Jotform...</pre><script>
+const log=document.getElementById('log'), btn=document.getElementById('test');
+const jf=window.JFCustomWidget;
+function report(s){log.textContent+= '\n'+s; if(jf&&typeof jf.requestFrameResize==='function')jf.requestFrameResize({height:document.body.scrollHeight+30});}
+if(!jf){report('Libreria non disponibile.');}else{
+jf.subscribe('ready',function(){
+log.textContent='Widget pronto.';
+['setFieldsValueById','setFieldsValueByLabel','getFieldsValueById','storeToField'].forEach(k=>report(k+': '+typeof jf[k]));
+btn.disabled=false;
+jf.subscribe('submit',()=>jf.sendSubmit({valid:true,value:'Diagnostica'}));
+});
+btn.onclick=function(){
+const id=document.getElementById('field').value.trim();
+if(!/^\d+$/.test(id)){report('Inserire un ID numerico valido.');return;}
+if(typeof jf.setFieldsValueById!=='function'){report('Metodo non disponibile.');return;}
+try{const payload={};payload[id]='TEST CLIENTE ORVED';const result=jf.setFieldsValueById(payload);report('Chiamata inviata con mappa ID/valore (firma sperimentale). Risultato: '+String(result));report('Controllare visivamente il campo nativo: la chiamata non prova la scrittura.');}catch(e){report('Errore: '+e.message);}
+};
+}
+</script></body></html>
