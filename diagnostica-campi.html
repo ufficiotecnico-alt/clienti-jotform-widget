@@ -5,8 +5,11 @@ const jf=window.JFCustomWidget;
 function report(s){log.textContent+= '\n'+s; if(jf&&typeof jf.requestFrameResize==='function')jf.requestFrameResize({height:document.body.scrollHeight+30});}
 if(!jf){report('Libreria non disponibile.');}else{
 jf.subscribe('ready',function(){
-log.textContent='Widget pronto.';
+log.textContent='Widget pronto – diagnostica v2.';
 ['setFieldsValueById','setFieldsValueByLabel','getFieldsValueById','storeToField'].forEach(k=>report(k+': '+typeof jf[k]));
+report('Firma reale setFieldsValueById: '+Function.prototype.toString.call(jf.setFieldsValueById));
+report('Firma reale setFieldsValueByLabel: '+Function.prototype.toString.call(jf.setFieldsValueByLabel));
+report('Firma reale storeToField: '+Function.prototype.toString.call(jf.storeToField));
 btn.disabled=false;
 jf.subscribe('submit',()=>jf.sendSubmit({valid:true,value:'Diagnostica'}));
 });
